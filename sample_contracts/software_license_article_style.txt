@@ -1,0 +1,17 @@
+SOFTWARE LICENSE AGREEMENT
+
+ARTICLE I Grant of License
+
+Licensor grants Licensee a non-exclusive, non-transferable license to use the Software solely for internal business purposes during the term of this Agreement.
+
+ARTICLE II Renewal Term
+
+This Agreement shall automatically renew for successive twelve (12) month periods unless either party provides written notice of termination at least ninety (90) days before the end of the current term. Auto-renewal fees shall increase by no more than 5% per renewal term.
+
+ARTICLE III Warranty Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+
+ARTICLE IV Dispute Resolution
+
+Any dispute arising under this Agreement shall first be submitted to good-faith mediation, and if unresolved within thirty (30) days, shall be settled by binding arbitration in accordance with the rules of the American Arbitration Association.
