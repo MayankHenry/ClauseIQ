@@ -1,0 +1,45 @@
+MASTER SERVICES AGREEMENT
+
+This Master Services Agreement ("Agreement") is entered into between Acme Vendor Inc. ("Vendor") and Client Corp ("Client").
+
+1. Services
+
+Vendor shall provide software development and maintenance services as described in each applicable Statement of Work. Vendor shall use commercially reasonable efforts to deliver services on time.
+
+2. Payment Terms
+
+Client shall pay Vendor within thirty (30) days of receipt of invoice. Late payments accrue interest at 1.5% per month. All fees are non-refundable unless otherwise stated in a Statement of Work.
+
+3. Term and Termination
+
+This Agreement shall commence on the Effective Date and continue for one (1) year, after which it shall automatically renew for successive one (1) year terms unless either party provides written notice of non-renewal at least sixty (60) days prior to the end of the then-current term.
+
+Either party may terminate this Agreement for material breach if such breach remains uncured for thirty (30) days after written notice.
+
+4. Confidentiality
+
+Each party agrees to hold the other party's confidential information in strict confidence and not disclose it to third parties without prior written consent. This obligation survives termination of this Agreement for a period of three (3) years.
+
+5. Limitation of Liability
+
+IN NO EVENT SHALL EITHER PARTY'S TOTAL LIABILITY UNDER THIS AGREEMENT EXCEED THE FEES PAID BY CLIENT IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM. NEITHER PARTY SHALL BE LIABLE FOR INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES.
+
+6. Indemnification
+
+Vendor shall indemnify and hold Client harmless from any third-party claims arising from Vendor's gross negligence or willful misconduct in performing the services.
+
+7. Intellectual Property
+
+All work product created by Vendor specifically for Client under a Statement of Work shall be considered "work made for hire" and shall be owned exclusively by Client upon full payment.
+
+8. Governing Law
+
+This Agreement shall be governed by the laws of the State of Delaware, without regard to its conflict of law principles. Any disputes shall be resolved exclusively in the state or federal courts located in Delaware.
+
+9. Force Majeure
+
+Neither party shall be liable for delays or failures in performance resulting from acts beyond its reasonable control, including natural disasters, war, or governmental action.
+
+10. Assignment
+
+Neither party may assign this Agreement without the prior written consent of the other party, except in connection with a merger, acquisition, or sale of substantially all assets.

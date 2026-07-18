@@ -7,3 +7,8 @@ pydantic-settings
 python-dotenv
 pdfplumber
 python-docx
+celery
+redis
+qdrant-client
+sentence-transformers
+pytest
