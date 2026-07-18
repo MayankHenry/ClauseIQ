@@ -148,7 +148,7 @@ cd ClauseIQ
 docker compose up -d
 ```
 
-This brings up **Postgres** (`localhost:5433`) and **Qdrant** (`localhost:6333`).
+This brings up **Postgres** (`localhost:5434`), **Qdrant** (`localhost:6333`), and **Redis** (`localhost:6380`).
 
 ### 2️⃣ Backend setup
 
@@ -194,18 +194,53 @@ clauseiq/
 │   ├── app/
 │   │   ├── main.py
 │   │   ├── api/
+│   │   ├── core/
+│   │   │   └── config.py      # centralized settings
+│   │   ├── db/
+│   │   │   └── session.py     # SQLAlchemy engine + session
 │   │   ├── models/
-│   │   │   └── db.py         # orgs, documents, clauses, clause_embeddings, queries, risk_flags
+│   │   │   └── db.py          # orgs, documents, clauses, clause_embeddings, queries, risk_flags
 │   │   ├── services/
-│   │   └── workers/          # Celery ingestion tasks
-│   ├── migrations/            # Alembic
+│   │   │   ├── parsers.py     # PDF/DOCX/TXT -> raw text
+│   │   │   ├── chunker.py     # clause-aware chunking
+│   │   │   ├── embeddings.py  # bge-small/bge-large embedding wrapper
+│   │   │   ├── vector_store.py # Qdrant client wrapper
+│   │   │   └── ingestion_core.py
+│   │   └── workers/
+│   │       ├── celery_app.py
+│   │       └── ingestion.py   # full ingestion pipeline task
+│   ├── migrations/             # Alembic
+│   ├── tests/
 │   └── requirements.txt
-└── frontend/                  # Next.js app
+├── scripts/
+│   └── seed_and_ingest.py     # local end-to-end pipeline test
+└── frontend/                   # Next.js app
 ```
 
 </details>
 
 ---
+
+## 🔌 Port Allocations
+
+This machine runs several local projects side by side (SentinelOps, FrameSentinel, a Nexus stack, Airflow) — Docker ports collide silently and just fail to bind rather than raising an obvious error, so here's what ClauseIQ actually uses and why:
+
+| Service | Port | Note |
+|---|---|---|
+| Postgres | `5434` | Moved off `5432` (taken by `nexus_db`) and then off `5433` (taken by `sentinelops-postgres`) |
+| Qdrant | `6333` / `6334` | Free on this machine so far |
+| Redis | `6380` | Moved off `6379` (taken by `sentinelops-redis`) |
+
+⚠️ **If a container silently fails to start** (`docker ps` shows fewer containers than expected, or you get a `password authentication failed` error even with correct credentials), it's almost always one of two things:
+
+1. **Port collision** — another local project's container already owns that port. Check with `docker ps` and look for the port already in the `PORTS` column of a different container.
+2. **Stale volume** — Postgres only applies `POSTGRES_USER`/`POSTGRES_PASSWORD` on first init. If the named volume (`pgdata`) already existed from a previous run, new credentials in `docker-compose.yml` are silently ignored. Fix with `docker compose down -v` (wipes the volume) then `docker compose up -d` + re-run migrations.
+
+Before starting a **new** portfolio project on this machine, run `docker ps` first and pick free ports deliberately rather than trusting the defaults in a tutorial's `docker-compose.yml`.
+
+---
+
+
 
 ## 🗺️ Roadmap
 
