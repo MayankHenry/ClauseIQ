@@ -13,6 +13,5 @@ celery_app = Celery(
     "clauseiq",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
+    include=["app.workers.ingestion"],
 )
-
-celery_app.autodiscover_tasks(["app.workers"])

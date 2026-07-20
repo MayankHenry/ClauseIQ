@@ -12,3 +12,5 @@ redis
 qdrant-client
 sentence-transformers
 pytest
+python-multipart
+httpx
