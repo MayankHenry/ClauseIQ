@@ -14,3 +14,4 @@ sentence-transformers
 pytest
 python-multipart
 httpx
+rank_bm25
