@@ -13,7 +13,6 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_COLLECTION: str = "clauseiq_clauses"
 
-
     # bge-small is used by default for fast local dev (~130MB download, CPU-friendly).
     # Swap to "BAAI/bge-large-en-v1.5" later for production-quality retrieval —
     # nothing else in the codebase needs to change, since embedding dimension
@@ -21,6 +20,7 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL_NAME: str = "BAAI/bge-small-en-v1.5"
 
     STORAGE_DIR: str = "./storage"
+    ANTHROPIC_API_KEY: str = ""
 
     class Config:
         env_file = ".env"
