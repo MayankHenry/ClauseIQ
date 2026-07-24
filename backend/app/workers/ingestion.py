@@ -38,7 +38,11 @@ def ingest_document(document_id: str) -> dict:
         if not clause_dicts:
             document.status = "failed"
             db.commit()
-            return {"document_id": document_id, "status": "failed", "reason": "no clauses extracted"}
+            return {
+                "document_id": document_id,
+                "status": "failed",
+                "reason": "no clauses extracted",
+            }
 
         # 2. Persist clause rows first, so we have real clause_ids to use
         #    as Qdrant payload references (needed for click-to-highlight later)
@@ -78,16 +82,22 @@ def ingest_document(document_id: str) -> dict:
 
         # 5. Persist clause_embeddings linking clause -> qdrant point
         for i, clause in enumerate(clause_rows):
-            db.add(ClauseEmbedding(
-                clause_id=clause.id,
-                qdrant_point_id=point_ids[i],
-                model_name=settings.EMBEDDING_MODEL_NAME,
-            ))
+            db.add(
+                ClauseEmbedding(
+                    clause_id=clause.id,
+                    qdrant_point_id=point_ids[i],
+                    model_name=settings.EMBEDDING_MODEL_NAME,
+                )
+            )
 
         document.status = "ready"
         db.commit()
 
-        return {"document_id": document_id, "status": "ready", "clause_count": len(clause_rows)}
+        return {
+            "document_id": document_id,
+            "status": "ready",
+            "clause_count": len(clause_rows),
+        }
 
     except Exception:
         db.rollback()

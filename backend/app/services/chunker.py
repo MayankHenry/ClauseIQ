@@ -20,9 +20,9 @@ from typing import List, Dict, Optional
 #   "Section 4.2: Confidentiality"
 #   "ARTICLE III Payment Terms"      (roman numerals)
 SECTION_PATTERN = re.compile(
-    r'^\s*(?:(?:ARTICLE|Article|Section|SECTION)\s+)?'
-    r'((?:\d+(?:\.\d+)*)|(?:[IVXLCDM]+))[\.\):]?\s+'
-    r'([A-Z][A-Za-z \-/&,]{2,80})\s*$'
+    r"^\s*(?:(?:ARTICLE|Article|Section|SECTION)\s+)?"
+    r"((?:\d+(?:\.\d+)*)|(?:[IVXLCDM]+))[\.\):]?\s+"
+    r"([A-Z][A-Za-z \-/&,]{2,80})\s*$"
 )
 
 # Keyword -> clause_type. Checked in order; first match wins.
@@ -35,7 +35,12 @@ CLAUSE_TYPE_KEYWORDS = {
     "liability": ["limitation of liability", "liability", "liable"],
     "payment": ["payment", "invoice", "fees", "compensation"],
     "governing_law": ["governing law", "jurisdiction", "venue"],
-    "intellectual_property": ["intellectual property", "ip rights", "copyright", "trademark"],
+    "intellectual_property": [
+        "intellectual property",
+        "ip rights",
+        "copyright",
+        "trademark",
+    ],
     "force_majeure": ["force majeure"],
     "assignment": ["assignment", "assign this agreement"],
     "dispute_resolution": ["arbitration", "dispute resolution", "mediation"],
@@ -95,12 +100,14 @@ def chunk_page_text(text: str, page: Optional[int]) -> List[Dict]:
         chunk_text = "\n".join(buffer).strip()
         if not chunk_text:
             return
-        chunks.append({
-            "text": chunk_text,
-            "section_number": current_section,
-            "clause_type": classify_clause_type(chunk_text, current_title),
-            "page": page,
-        })
+        chunks.append(
+            {
+                "text": chunk_text,
+                "section_number": current_section,
+                "clause_type": classify_clause_type(chunk_text, current_title),
+                "page": page,
+            }
+        )
 
     for line in lines:
         match = SECTION_PATTERN.match(line)
@@ -123,12 +130,14 @@ def chunk_page_text(text: str, page: Optional[int]) -> List[Dict]:
     if not found_any_header:
         chunks = []
         for para in split_into_paragraphs(text):
-            chunks.append({
-                "text": para,
-                "section_number": None,
-                "clause_type": classify_clause_type(para),
-                "page": page,
-            })
+            chunks.append(
+                {
+                    "text": para,
+                    "section_number": None,
+                    "clause_type": classify_clause_type(para),
+                    "page": page,
+                }
+            )
 
     # Sub-split any section that's too large to stay a precise retrieval unit
     final_chunks = []
@@ -137,12 +146,14 @@ def chunk_page_text(text: str, page: Optional[int]) -> List[Dict]:
             final_chunks.append(chunk)
         else:
             for para in split_into_paragraphs(chunk["text"]):
-                final_chunks.append({
-                    "text": para,
-                    "section_number": chunk["section_number"],
-                    "clause_type": classify_clause_type(para),
-                    "page": chunk["page"],
-                })
+                final_chunks.append(
+                    {
+                        "text": para,
+                        "section_number": chunk["section_number"],
+                        "clause_type": classify_clause_type(para),
+                        "page": chunk["page"],
+                    }
+                )
     return final_chunks
 
 

@@ -44,9 +44,9 @@ def upsert_clause_vectors(
     here as UUIDs, then returned so callers can persist the mapping in
     Postgres's clause_embeddings table).
     """
-    assert len(clause_ids) == len(vectors) == len(payloads), (
-        "clause_ids, vectors, and payloads must all be the same length"
-    )
+    assert (
+        len(clause_ids) == len(vectors) == len(payloads)
+    ), "clause_ids, vectors, and payloads must all be the same length"
 
     client = get_client()
     point_ids = [str(uuid.uuid4()) for _ in clause_ids]

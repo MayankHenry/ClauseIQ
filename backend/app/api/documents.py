@@ -58,9 +58,10 @@ async def upload_document(
 ):
     ext = file.filename.lower().rsplit(".", 1)[-1] if "." in file.filename else ""
     if ext not in ALLOWED_EXTENSIONS:
+        allowed = ", ".join(sorted(ALLOWED_EXTENSIONS))
         raise HTTPException(
             status_code=400,
-            detail=f"Unsupported file type '.{ext}'. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
+            detail=f"Unsupported file type '.{ext}'. Allowed: {allowed}",
         )
 
     os.makedirs(settings.STORAGE_DIR, exist_ok=True)
@@ -115,7 +116,9 @@ def get_document_status(document_id: str, db: Session = Depends(get_db)):
 
     clause_count = None
     if document.status == "ready":
-        clause_count = db.query(Clause).filter(Clause.document_id == document.id).count()
+        clause_count = (
+            db.query(Clause).filter(Clause.document_id == document.id).count()
+        )
 
     return DocumentStatusResponse(
         document_id=document.id,

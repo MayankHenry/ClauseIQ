@@ -23,7 +23,9 @@ class Document(Base):
     org_id = Column(String, ForeignKey("orgs.id"), nullable=False)
     filename = Column(String, nullable=False)
     contract_type = Column(String)  # e.g. "NDA", "vendor_agreement"
-    status = Column(String, default="uploaded")  # uploaded -> parsing -> ready -> failed
+    status = Column(
+        String, default="uploaded"
+    )  # uploaded -> parsing -> ready -> failed
     storage_path = Column(String)
     created_at = Column(DateTime, server_default=func.now())
 
@@ -33,10 +35,10 @@ class Clause(Base):
     id = Column(String, primary_key=True, default=gen_uuid)
     document_id = Column(String, ForeignKey("documents.id"), nullable=False)
     text = Column(Text, nullable=False)
-    clause_type = Column(String)       # e.g. "termination", "auto_renewal"
+    clause_type = Column(String)  # e.g. "termination", "auto_renewal"
     section_number = Column(String)
     page = Column(Integer)
-    bbox = Column(JSON)                # for highlight-on-click
+    bbox = Column(JSON)  # for highlight-on-click
 
 
 class ClauseEmbedding(Base):
