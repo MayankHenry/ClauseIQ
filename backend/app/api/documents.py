@@ -6,7 +6,9 @@ POST /documents/upload       -> accepts a PDF/DOCX/TXT file, saves it to disk,
                                  and enqueues the ingestion pipeline as an
                                  async Celery task.
 GET  /documents/{id}/status  -> returns current status, and clause count once ready.
-GET  /documents              -> lists all documents (feeds the frontend doc list, Day 11).
+GET  /documents              -> lists all documents (feeds the frontend doc list).
+GET  /documents/{id}/file    -> serves the original uploaded file bytes, so the
+                                 frontend can render it (e.g. PDF.js for PDFs).
 """
 
 import os
@@ -14,6 +16,7 @@ import uuid
 from typing import Optional, List
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -22,11 +25,18 @@ from app.db.bootstrap import get_or_create_default_org
 from app.models.db import Document, Clause
 from app.core.config import settings
 from app.workers.ingestion import ingest_document
+from app.api.auth import require_auth
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
 MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024  # 25MB
+
+MEDIA_TYPES = {
+    "pdf": "application/pdf",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "txt": "text/plain",
+}
 
 
 class DocumentUploadResponse(BaseModel):
@@ -50,7 +60,7 @@ class DocumentListItem(BaseModel):
     contract_type: Optional[str] = None
 
 
-@router.post("/upload", response_model=DocumentUploadResponse)
+@router.post("/upload", response_model=DocumentUploadResponse, dependencies=[Depends(require_auth)])
 async def upload_document(
     file: UploadFile = File(...),
     contract_type: Optional[str] = None,
@@ -66,7 +76,6 @@ async def upload_document(
 
     os.makedirs(settings.STORAGE_DIR, exist_ok=True)
 
-    # Read into memory first so the size limit can be enforced before touching disk
     contents = await file.read()
     if len(contents) > MAX_FILE_SIZE_BYTES:
         raise HTTPException(
@@ -76,8 +85,6 @@ async def upload_document(
     if len(contents) == 0:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
-    # UUID-prefixed filename avoids collisions between different uploads
-    # that happen to share the same original filename
     stored_filename = f"{uuid.uuid4()}_{file.filename}"
     dest_path = os.path.join(settings.STORAGE_DIR, stored_filename)
     with open(dest_path, "wb") as f:
@@ -96,9 +103,6 @@ async def upload_document(
     db.commit()
     db.refresh(document)
 
-    # Enqueue ingestion asynchronously via Celery. Requires a worker running
-    # (see README) — the task sits in the Redis queue until one picks it up;
-    # this endpoint itself returns immediately without blocking on it.
     ingest_document.delay(document.id)
 
     return DocumentUploadResponse(
@@ -116,9 +120,7 @@ def get_document_status(document_id: str, db: Session = Depends(get_db)):
 
     clause_count = None
     if document.status == "ready":
-        clause_count = (
-            db.query(Clause).filter(Clause.document_id == document.id).count()
-        )
+        clause_count = db.query(Clause).filter(Clause.document_id == document.id).count()
 
     return DocumentStatusResponse(
         document_id=document.id,
@@ -141,3 +143,17 @@ def list_documents(db: Session = Depends(get_db)):
         )
         for d in documents
     ]
+
+
+@router.get("/{document_id}/file")
+def get_document_file(document_id: str, db: Session = Depends(get_db)):
+    document = db.query(Document).filter(Document.id == document_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if not document.storage_path or not os.path.exists(document.storage_path):
+        raise HTTPException(status_code=404, detail="Original file no longer available on disk")
+
+    ext = document.filename.lower().rsplit(".", 1)[-1] if "." in document.filename else ""
+    media_type = MEDIA_TYPES.get(ext, "application/octet-stream")
+
+    return FileResponse(document.storage_path, media_type=media_type, filename=document.filename)

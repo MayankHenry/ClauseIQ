@@ -5,3 +5,15 @@ alembic
 psycopg2-binary
 pydantic-settings
 python-dotenv
+pdfplumber
+python-docx
+celery
+redis
+qdrant-client
+sentence-transformers
+pytest
+python-multipart
+httpx
+rank_bm25
+anthropic
+pyjwt

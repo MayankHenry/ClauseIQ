@@ -8,17 +8,17 @@
 
 <br/>
 
-![Status](https://img.shields.io/badge/status-in%20development-yellow?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-14%2F14%20days-brightgreen?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![Next.js](https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=white)
 ![Qdrant](https://img.shields.io/badge/Qdrant-DC244C?style=for-the-badge&logo=qdrant&logoColor=white)
-![Postgres](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-informational?style=for-the-badge)
 
 <br/>
 
-[Features](#-features) • [Architecture](#-architecture) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Roadmap](#-roadmap) • [Team](#-team)
+[Features](#-features) • [Architecture](#-architecture) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Deployment](#-deployment) • [Testing](#-testing)
 
 </div>
 
@@ -44,11 +44,12 @@ Built for small businesses, freelancers, startup founders signing vendor contrac
 |---|---|
 | 📄 **Multi-format ingestion** | Upload PDF or DOCX contracts, auto-parsed into clause-level chunks |
 | 💬 **Natural-language Q&A** | Ask questions across one or many documents at once |
-| 🎯 **Exact citation grounding** | Every answer links back to the precise clause — click to jump straight to it in the PDF |
-| ⚖️ **Risk-diffing engine** | New uploads are automatically compared against your standard template, with severity-scored flags |
-| 🔎 **Hybrid retrieval** | BM25 + vector search + cross-encoder reranking — production-grade RAG, not "chat with your PDF" |
-| 🏢 **Multi-tenant ready** | Org/workspace model built in from day one |
-| 🛡️ **Anti-hallucination guardrail** | Ungrounded answers are rejected before they reach you |
+| 🎯 **Exact citation grounding** | Every answer links back to the precise clause. Ungrounded or hallucinated citations are rejected, not surfaced |
+| ⚖️ **Risk-diffing engine** | New uploads are compared against your standard template, clause by clause, with severity-scored flags |
+| 🔎 **Hybrid retrieval** | BM25 + vector search + cross-encoder reranking |
+| 🖊️ **Margin-rail risk review** | A dedicated dashboard for reviewing flagged clauses, ranked by severity |
+| 🔐 **Bare-bones auth** | Shared-password JWT gate on all mutating actions |
+| 🏢 **Multi-tenant-ready schema** | Org/workspace model built into the data layer from day one |
 
 ---
 
@@ -73,19 +74,19 @@ flowchart LR
     E --> L
     L --> M[🚩 Severity-Scored<br/>Risk Flags]
 
-    style A fill:#4f46e5,color:#fff
-    style F fill:#4f46e5,color:#fff
-    style J fill:#16a34a,color:#fff
-    style M fill:#dc2626,color:#fff
+    style A fill:#2451B3,color:#fff
+    style F fill:#2451B3,color:#fff
+    style J fill:#2E7D4F,color:#fff
+    style M fill:#B3261E,color:#fff
 ```
 
 ### How it works
 
 **Ingestion pipeline:** Upload → parse into clauses/sections → chunk with clause-level metadata (type, section number) → embed → store vectors + metadata → mark document "ready."
 
-**Query pipeline:** Question → hybrid retrieval (BM25 + vector) over relevant docs → cross-encoder rerank → LLM synthesizes an answer *only* from retrieved chunks, forced to cite chunk IDs → frontend maps citations back to exact PDF locations for click-to-highlight.
+**Query pipeline:** Question → hybrid retrieval (BM25 + vector) over relevant docs → cross-encoder rerank → LLM synthesizes an answer *only* from retrieved chunks, forced to cite chunk IDs → any citation not traceable to a real clause causes the answer to be marked ungrounded rather than trusted.
 
-**Risk-diffing:** Maintain one standard template per contract type → new uploads get matched clause-by-clause → LLM flags additions, deletions, and changed obligations with a severity score.
+**Risk-diffing:** Maintain one standard template per contract type → new uploads get matched clause-by-clause (by clause type) → LLM flags missing clauses and substantive differences with a severity score, fails safe (flags for manual review) if its response can't be parsed.
 
 ---
 
@@ -97,18 +98,19 @@ flowchart LR
 
 **Backend**
 - FastAPI + Celery (async ingestion)
-- PostgreSQL — documents/users/orgs metadata
+- PostgreSQL — documents/users/orgs/risk-flags metadata
 - Qdrant — vector storage
 - BM25 + cross-encoder reranker — hybrid retrieval
-- Claude API — grounded answer synthesis
+- Claude API — grounded answer synthesis + risk comparison
+- PyJWT — bare-bones auth
 
 </td>
-<td valign="top" width="50%">
+<td valign="top">
 
 **Frontend**
-- Next.js (React) + TailwindCSS
-- PDF.js — inline clause highlighting
-- Clerk / Auth0 — multi-tenant auth
+- Next.js 14 (App Router) + TypeScript + TailwindCSS
+- PDF.js — inline PDF preview with page-jump on citation click
+- Custom design system (see below) — no default component library
 
 </td>
 </tr>
@@ -116,20 +118,30 @@ flowchart LR
 <td valign="top">
 
 **Infra**
-- Docker Compose (local dev)
+- Docker Compose (local dev — Postgres, Qdrant, Redis)
 - Vercel (frontend deploy)
-- Railway / Render (backend deploy)
+- Railway / Render (backend + worker deploy)
 
 </td>
 <td valign="top">
 
 **Embeddings**
-- `bge-large` (open-source, zero API cost in dev)
-- Swappable for OpenAI / Voyage / Cohere
+- `bge-small` (open-source, zero API cost in dev)
+- Swappable to `bge-large` via one config value
 
 </td>
 </tr>
 </table>
+
+---
+
+## 🎨 Design system
+
+The frontend deliberately avoids the generic-AI-tool look (warm cream + terracotta, or dark mode + neon accent). Instead it borrows from the actual subject matter — how a lawyer marks up a paper contract:
+
+- **Palette**: cool paper white background, near-navy ink, a restrained "filed" blue for interactive elements. Red/amber/green only ever mean risk severity — never decoration.
+- **Type**: Source Serif 4 for structure (headings, section labels), IBM Plex Sans for interface text, IBM Plex Mono for clause IDs, section numbers, and severity scores — numbers read as data, not prose.
+- **Signature element**: the **margin rail** on the risk-review page — a vertical annotation rail with one tick per flagged clause, colored by severity, echoing a redlined margin. Only flagged clauses get a tick, same as a real margin: nobody annotates the boilerplate that's fine.
 
 ---
 
@@ -139,6 +151,7 @@ flowchart LR
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Python 3.11+
 - Node.js 18+
+- An [Anthropic API key](https://console.anthropic.com) (free trial credits available, no card required)
 
 ### 1️⃣ Clone & start infrastructure
 
@@ -148,7 +161,7 @@ cd ClauseIQ
 docker compose up -d
 ```
 
-This brings up **Postgres** (`localhost:5434`), **Qdrant** (`localhost:6333`), and **Redis** (`localhost:6380`).
+This brings up **Postgres**, **Qdrant**, and **Redis**. Check ports match your `docker-compose.yml` — this project moved Postgres/Redis off their defaults during development to avoid clashing with other local projects (see [Port Allocations](#-port-allocations) below).
 
 ### 2️⃣ Backend setup
 
@@ -162,26 +175,33 @@ python3 -m venv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
+cp .env.example .env   # then fill in ANTHROPIC_API_KEY at minimum
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-### 3️⃣ Verify it's alive
-
+**In a second terminal**, start the Celery worker (required for uploads to actually process):
 ```bash
-curl http://localhost:8000/health
-# {"status": "ok"}
-
-curl http://localhost:6333/collections
-# {"result":{"collections":[]}, "status":"ok"}
+cd backend
+celery -A app.workers.celery_app worker --loglevel=info --pool=solo   # --pool=solo is Windows-only
 ```
 
-### 4️⃣ Frontend (coming Week 2)
+### 3️⃣ Frontend setup
 
 ```bash
 cd frontend
 npm install
+cp .env.local.example .env.local
 npm run dev
+```
+
+Open `http://localhost:3000`.
+
+### 4️⃣ Verify
+
+```bash
+curl http://localhost:8000/health
+# {"status": "ok"}
 ```
 
 <details>
@@ -191,30 +211,24 @@ npm run dev
 clauseiq/
 ├── docker-compose.yml
 ├── backend/
+│   ├── Dockerfile
+│   ├── Procfile / railway.json
 │   ├── app/
 │   │   ├── main.py
-│   │   ├── api/
-│   │   ├── core/
-│   │   │   └── config.py      # centralized settings
-│   │   ├── db/
-│   │   │   └── session.py     # SQLAlchemy engine + session
-│   │   ├── models/
-│   │   │   └── db.py          # orgs, documents, clauses, clause_embeddings, queries, risk_flags
-│   │   ├── services/
-│   │   │   ├── parsers.py     # PDF/DOCX/TXT -> raw text
-│   │   │   ├── chunker.py     # clause-aware chunking
-│   │   │   ├── embeddings.py  # bge-small/bge-large embedding wrapper
-│   │   │   ├── vector_store.py # Qdrant client wrapper
-│   │   │   └── ingestion_core.py
-│   │   └── workers/
-│   │       ├── celery_app.py
-│   │       └── ingestion.py   # full ingestion pipeline task
-│   ├── migrations/             # Alembic
-│   ├── tests/
-│   └── requirements.txt
-├── scripts/
-│   └── seed_and_ingest.py     # local end-to-end pipeline test
-└── frontend/                   # Next.js app
+│   │   ├── api/          # documents, search, query, risk, auth
+│   │   ├── core/          # config, auth
+│   │   ├── db/             # session, bootstrap
+│   │   ├── models/       # orgs, documents, clauses, clause_embeddings, queries, risk_flags
+│   │   ├── services/     # parsers, chunker, embeddings, vector_store,
+│   │   │                    retrieval, reranker, synthesis, risk_diff
+│   │   └── workers/       # Celery ingestion pipeline
+│   ├── migrations/         # Alembic
+│   └── tests/
+├── frontend/
+│   ├── app/                 # /, /chat, /risk, /risk/[id], /login
+│   ├── components/
+│   └── lib/                 # api client, auth, severity helpers
+└── scripts/                 # local test/eval scripts
 ```
 
 </details>
@@ -223,51 +237,51 @@ clauseiq/
 
 ## 🔌 Port Allocations
 
-This machine runs several local projects side by side (SentinelOps, FrameSentinel, a Nexus stack, Airflow) — Docker ports collide silently and just fail to bind rather than raising an obvious error, so here's what ClauseIQ actually uses and why:
+This machine runs several local projects side by side — Docker ports collide silently and just fail to bind, so here's what ClauseIQ actually uses:
 
 | Service | Port | Note |
 |---|---|---|
-| Postgres | `5434` | Moved off `5432` (taken by `nexus_db`) and then off `5433` (taken by `sentinelops-postgres`) |
-| Qdrant | `6333` / `6334` | Free on this machine so far |
-| Redis | `6380` | Moved off `6379` (taken by `sentinelops-redis`) |
+| Postgres | `5434` | Moved off `5432`/`5433` to avoid conflicts with other local projects |
+| Qdrant | `6333` / `6334` | |
+| Redis | `6380` | Moved off `6379` for the same reason |
 
-⚠️ **If a container silently fails to start** (`docker ps` shows fewer containers than expected, or you get a `password authentication failed` error even with correct credentials), it's almost always one of two things:
-
-1. **Port collision** — another local project's container already owns that port. Check with `docker ps` and look for the port already in the `PORTS` column of a different container.
-2. **Stale volume** — Postgres only applies `POSTGRES_USER`/`POSTGRES_PASSWORD` on first init. If the named volume (`pgdata`) already existed from a previous run, new credentials in `docker-compose.yml` are silently ignored. Fix with `docker compose down -v` (wipes the volume) then `docker compose up -d` + re-run migrations.
-
-Before starting a **new** portfolio project on this machine, run `docker ps` first and pick free ports deliberately rather than trusting the defaults in a tutorial's `docker-compose.yml`.
+⚠️ If a container silently fails to start, it's almost always a **port collision** (check `docker ps` for the port already in use elsewhere) or a **stale volume** (Postgres only applies `POSTGRES_PASSWORD` on first init — fix with `docker compose down -v` then `docker compose up -d`, then re-run migrations).
 
 ---
 
+## ☁️ Deployment
 
+**Frontend → Vercel**
+```bash
+cd frontend
+vercel deploy
+```
+Set `NEXT_PUBLIC_API_URL` to your deployed backend URL in Vercel's environment variables.
 
-## 🗺️ Roadmap
+**Backend → Railway / Render**
+- `railway.json` and `Procfile` are both included — most platforms auto-detect one
+- Set all variables from `.env.example` in your platform's dashboard, **especially `APP_PASSWORD` and `APP_SECRET_KEY`** — without them, auth silently becomes a no-op (fine for local dev, not for anything public)
+- Deploy the Celery worker as a **second service** using the same image/repo, with the worker start command instead of the web one
+- Point `DATABASE_URL`, `QDRANT_URL`, and `REDIS_URL` at managed instances (Railway/Render Postgres and Redis add-ons, or a hosted Qdrant Cloud cluster)
 
-<details open>
-<summary><b>Week 1 — Ingestion + Retrieval Core</b></summary>
+A `Dockerfile` is included for platforms that prefer container-based deploys over buildpacks.
 
-- [x] Repo, Docker Compose (Postgres + Qdrant), schema migrated
-- [ ] Clause-aware chunker
-- [ ] Embedding + ingestion pipeline
-- [ ] Upload API + status tracking
-- [ ] Hybrid retrieval (BM25 + vector)
-- [ ] Cross-encoder reranker
+---
 
-</details>
+## 🧪 Testing
 
-<details>
-<summary><b>Week 2 — Synthesis, Risk-Diffing, Frontend, Ship</b></summary>
+```bash
+cd backend
+pytest tests/ -v
+```
 
-- [ ] Citation-grounded answer synthesis
-- [ ] Query API + eval logging
-- [ ] Risk-diffing engine
-- [ ] Frontend: upload + document list
-- [ ] Frontend: chat + citation highlighting
-- [ ] Frontend: risk-diff dashboard + auth
-- [ ] Deploy + polish
+30 tests across the pipeline: clause-aware chunking, ingestion logic, hybrid retrieval scoring, reranking, citation-grounded synthesis (including the anti-hallucination guardrail), risk-diffing (including fail-safe behavior on malformed LLM output), and auth. All mock external services (embeddings, Qdrant, Claude) via dependency injection, so the suite runs in under a second with no infrastructure required.
 
-</details>
+```bash
+cd frontend
+npx tsc --noEmit
+npm run build
+```
 
 ---
 
@@ -278,8 +292,17 @@ Before starting a **new** portfolio project on this machine, run `docker ps` fir
 | Fixed-window chunking | **Clause-aware chunking** — splits by legal structure, not token count |
 | Pure vector similarity | **Hybrid search** (BM25 + vector) + cross-encoder reranking |
 | Answers with no proof | **Forced citation grounding** — ungrounded answers are rejected |
-| Single-doc toy | **Multi-tenant, multi-document** from day one |
+| Single-doc toy | **Multi-tenant-ready, multi-document** from day one |
 | No risk awareness | **Automated risk-diffing** against your own standard templates |
+| Generic dashboard UI | **Purpose-built design system**, not a default component kit |
+
+---
+
+## ⚠️ Known Limitations
+
+- **Citation click jumps to page, not exact position.** `Clause.bbox` exists in the schema but isn't populated during ingestion — pixel-perfect highlighting is a natural next step, not implemented yet.
+- **Auth is single-shared-password, not multi-user.** Real per-user accounts (Clerk/Auth0) were the planned upgrade path if this became a real product; out of scope for the current timeline.
+- **BM25 index rebuilds per query** rather than persisting — fine at hundreds/thousands of clauses, would need a persistent inverted index at real scale.
 
 ---
 
@@ -301,7 +324,6 @@ Before starting a **new** portfolio project on this machine, run `docker ps` fir
 MIT — see [LICENSE](LICENSE) for details.
 
 <div align="center">
-
 <br/>
 
 **⭐ Star this repo if ClauseIQ helped you avoid signing a bad contract.**

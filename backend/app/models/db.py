@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Text, ForeignKey, DateTime, Float, JSON
+from sqlalchemy import Column, String, Integer, Text, ForeignKey, DateTime, Float, JSON, Boolean
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 import uuid
@@ -22,11 +22,10 @@ class Document(Base):
     id = Column(String, primary_key=True, default=gen_uuid)
     org_id = Column(String, ForeignKey("orgs.id"), nullable=False)
     filename = Column(String, nullable=False)
-    contract_type = Column(String)  # e.g. "NDA", "vendor_agreement"
-    status = Column(
-        String, default="uploaded"
-    )  # uploaded -> parsing -> ready -> failed
+    contract_type = Column(String)
+    status = Column(String, default="uploaded")
     storage_path = Column(String)
+    is_template = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -35,10 +34,10 @@ class Clause(Base):
     id = Column(String, primary_key=True, default=gen_uuid)
     document_id = Column(String, ForeignKey("documents.id"), nullable=False)
     text = Column(Text, nullable=False)
-    clause_type = Column(String)  # e.g. "termination", "auto_renewal"
+    clause_type = Column(String)
     section_number = Column(String)
     page = Column(Integer)
-    bbox = Column(JSON)  # for highlight-on-click
+    bbox = Column(JSON)
 
 
 class ClauseEmbedding(Base):
@@ -64,6 +63,8 @@ class RiskFlag(Base):
     id = Column(String, primary_key=True, default=gen_uuid)
     document_id = Column(String, ForeignKey("documents.id"), nullable=False)
     clause_id = Column(String, ForeignKey("clauses.id"))
+    clause_type = Column(String)
+    flag_type = Column(String)  # "missing" | "changed"
     description = Column(Text)
-    severity = Column(Float)  # 0-1 score
+    severity = Column(Float)
     created_at = Column(DateTime, server_default=func.now())
