@@ -12,8 +12,10 @@ app = FastAPI(title="ClauseIQ API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-    "http://localhost:3000",
-    "https://clause-iq-1.vercel.app",
+        "http://localhost:3000",
+        "https://clause-iq-1.vercel.app",
+        "https://clause-iq-1-git-main-mayankhenrys-projects.vercel.app",
+        "https://clause-iq-1-fxtn5mfzg-mayankhenrys-projects.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
