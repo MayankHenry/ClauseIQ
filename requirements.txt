@@ -15,4 +15,4 @@ pytest
 python-multipart
 httpx
 rank_bm25
-anthropic
+openai

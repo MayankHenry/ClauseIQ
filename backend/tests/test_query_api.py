@@ -1,7 +1,7 @@
 """
 Tests for the /query endpoint. Mocks hybrid_retrieve, rerank, and
-synthesize_answer so this runs with no Postgres/Qdrant/Anthropic API
-key needed — fast and CI-friendly. Uses in-memory SQLite, same pattern
+synthesize_answer so this runs without external Postgres, Qdrant, or
+LLM access — fast and CI-friendly. Uses in-memory SQLite, same pattern
 as test_documents_api.py.
 """
 

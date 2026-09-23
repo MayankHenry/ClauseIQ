@@ -28,16 +28,19 @@ CallLLMFn = Callable[[str], str]
 
 
 def _default_call_llm(prompt: str) -> str:
-    import anthropic
+    from openai import OpenAI
     from app.core.config import settings
 
-    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-    response = client.messages.create(
-        model="claude-haiku-4-5",
+    client = OpenAI(
+        base_url=settings.OPENROUTER_BASE_URL,
+        api_key=settings.OPENROUTER_API_KEY,
+    )
+    response = client.chat.completions.create(
+        model="nex-agi/nex-n2.5-pro:free",
         max_tokens=512,
         messages=[{"role": "user", "content": prompt}],
     )
-    return "".join(block.text for block in response.content if block.type == "text")
+    return response.choices[0].message.content or ""
 
 
 def group_clauses_by_type(clauses: List[Dict]) -> Dict[str, List[Dict]]:

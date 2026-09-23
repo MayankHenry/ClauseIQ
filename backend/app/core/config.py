@@ -8,7 +8,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6380/0"
     EMBEDDING_MODEL_NAME: str = "BAAI/bge-small-en-v1.5"
     STORAGE_DIR: str = "./storage"
-    ANTHROPIC_API_KEY: str = ""
+    OPENROUTER_API_KEY: str = ""
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 
     # Bare-bones auth (Day 13). Leave APP_PASSWORD unset for local dev --
     # auth becomes a no-op. Set both in any deployed environment.

@@ -151,7 +151,7 @@ The frontend deliberately avoids the generic-AI-tool look (warm cream + terracot
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Python 3.11+
 - Node.js 18+
-- An [Anthropic API key](https://console.anthropic.com) (free trial credits available, no card required)
+- An [OpenRouter API key](https://openrouter.ai)
 
 ### 1️⃣ Clone & start infrastructure
 
@@ -175,7 +175,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
-cp .env.example .env   # then fill in ANTHROPIC_API_KEY at minimum
+cp .env.example .env   # then fill in OPENROUTER_API_KEY at minimum
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
