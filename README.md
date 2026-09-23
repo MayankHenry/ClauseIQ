@@ -258,11 +258,11 @@ vercel deploy
 ```
 Set `NEXT_PUBLIC_API_URL` to your deployed backend URL in Vercel's environment variables.
 
-**Backend → Railway / Render**
-- `railway.json` and `Procfile` are both included — most platforms auto-detect one
+**Backend → Render**
+- `railway.json` and `Procfile` are both included, but for Render the web service will typically use the standard FastAPI startup command
 - Set all variables from `.env.example` in your platform's dashboard, **especially `APP_PASSWORD` and `APP_SECRET_KEY`** — without them, auth silently becomes a no-op (fine for local dev, not for anything public)
 - Deploy the Celery worker as a **second service** using the same image/repo, with the worker start command instead of the web one
-- Point `DATABASE_URL`, `QDRANT_URL`, and `REDIS_URL` at managed instances (Railway/Render Postgres and Redis add-ons, or a hosted Qdrant Cloud cluster)
+- Point `DATABASE_URL`, `QDRANT_URL`, and `REDIS_URL` at managed instances (Render Postgres/Redis or a hosted Qdrant Cloud cluster)
 
 A `Dockerfile` is included for platforms that prefer container-based deploys over buildpacks.
 
