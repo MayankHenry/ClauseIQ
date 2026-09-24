@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # Bare-bones auth (Day 13). Leave APP_PASSWORD unset for local dev --
     # auth becomes a no-op. Set both in any deployed environment.
     APP_PASSWORD: str = ""
-    APP_SECRET_KEY: str = "dev-only-change-me-before-deploying"
+    APP_SECRET_KEY: str = ""
 
     class Config:
         env_file = ".env"
