@@ -62,9 +62,9 @@ class DocumentListItem(BaseModel):
 
 @router.post("/upload", response_model=DocumentUploadResponse, dependencies=[Depends(require_auth)])
 async def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     contract_type: Optional[str] = None,
-    background_tasks: BackgroundTasks = None,
     db: Session = Depends(get_db),
 ):
     ext = file.filename.lower().rsplit(".", 1)[-1] if "." in file.filename else ""
