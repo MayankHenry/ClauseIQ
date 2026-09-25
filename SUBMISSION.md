@@ -268,7 +268,7 @@ Answer quality depends on the uploaded document containing the relevant language
 
 ## 14. Team
 
-**Team Gladiators** — Dell FutureMinds AI Hackathon 2026
+**Team Gladiators**
 
 | Name | Role |
 |---|---|

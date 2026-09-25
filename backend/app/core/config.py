@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_COLLECTION: str = "clauseiq_clauses"
     REDIS_URL: str = "redis://localhost:6380/0"
+    INGESTION_MODE: str = "background"
     EMBEDDING_MODEL_NAME: str = "BAAI/bge-small-en-v1.5"
     STORAGE_DIR: str = "./storage"
     OPENROUTER_API_KEY: str = ""

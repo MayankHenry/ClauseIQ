@@ -49,6 +49,7 @@ def client(monkeypatch, tmp_path):
 
     # Don't actually hit Celery/Redis during tests
     monkeypatch.setattr(documents_module.ingest_document, "delay", lambda document_id: None)
+    monkeypatch.setattr(documents_module.settings, "INGESTION_MODE", "celery")
 
     # Write uploaded files to a throwaway temp dir instead of the real storage dir
     monkeypatch.setattr(documents_module.settings, "STORAGE_DIR", str(tmp_path))

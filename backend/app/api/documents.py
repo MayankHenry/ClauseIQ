@@ -15,7 +15,7 @@ import os
 import uuid
 from typing import Optional, List
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, BackgroundTasks, UploadFile, File, HTTPException, Depends
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -64,6 +64,7 @@ class DocumentListItem(BaseModel):
 async def upload_document(
     file: UploadFile = File(...),
     contract_type: Optional[str] = None,
+    background_tasks: BackgroundTasks = None,
     db: Session = Depends(get_db),
 ):
     ext = file.filename.lower().rsplit(".", 1)[-1] if "." in file.filename else ""
@@ -103,7 +104,10 @@ async def upload_document(
     db.commit()
     db.refresh(document)
 
-    ingest_document.delay(document.id)
+    if settings.INGESTION_MODE == "celery":
+        ingest_document.delay(document.id)
+    else:
+        background_tasks.add_task(ingest_document, document.id)
 
     return DocumentUploadResponse(
         document_id=document.id,

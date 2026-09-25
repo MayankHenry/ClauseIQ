@@ -13,6 +13,7 @@ import ClauseSourcePanel from "@/components/ClauseSourcePanel";
 import PdfViewer, { type PdfViewerHandle } from "@/components/PdfViewer";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const POLL_INTERVAL_MS = 3000;
 
 export default function ChatInterface() {
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
@@ -22,15 +23,42 @@ export default function ChatInterface() {
   const [response, setResponse] = useState<QueryResponse | null>(null);
   const [activeClause, setActiveClause] = useState<CitedClause | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(true);
   const pdfViewerRef = useRef<PdfViewerHandle>(null);
 
   useEffect(() => {
-    listDocuments().then((docs) => {
-      setDocuments(docs.filter((d) => d.status === "ready"));
-    });
+    let isMounted = true;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    async function loadDocuments() {
+      try {
+        const docs = await listDocuments();
+        if (!isMounted) return;
+        setDocuments(docs);
+        setIsLoadingDocuments(false);
+        if (!docs.some((doc) => doc.status === "uploaded" || doc.status === "parsing")) {
+          if (interval) clearInterval(interval);
+          interval = null;
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Could not load documents.");
+          setIsLoadingDocuments(false);
+        }
+      }
+    }
+
+    loadDocuments();
+    interval = setInterval(loadDocuments, POLL_INTERVAL_MS);
+
+    return () => {
+      isMounted = false;
+      if (interval) clearInterval(interval);
+    };
   }, []);
 
-  const selectedDoc = documents.find((d) => d.document_id === selectedDocId);
+  const readyDocuments = documents.filter((d) => d.status === "ready");
+  const selectedDoc = readyDocuments.find((d) => d.document_id === selectedDocId);
   const isSelectedDocPdf = selectedDoc?.filename.toLowerCase().endsWith(".pdf");
 
   async function handleAsk() {
@@ -70,13 +98,17 @@ export default function ChatInterface() {
             }}
             className="w-full rounded border border-rule px-3 py-2 text-sm"
           >
-            <option value="">All documents</option>
+            <option value="">All ready documents</option>
             {documents.map((d) => (
-              <option key={d.document_id} value={d.document_id}>
-                {d.filename}
+              <option key={d.document_id} value={d.document_id} disabled={d.status !== "ready"}>
+                {d.filename} ({d.status})
               </option>
             ))}
           </select>
+          {isLoadingDocuments && <p className="mt-1 text-xs text-muted">Loading documents...</p>}
+          {!isLoadingDocuments && readyDocuments.length === 0 && documents.length > 0 && (
+            <p className="mt-1 text-xs text-muted">Uploaded documents are still processing.</p>
+          )}
         </div>
 
         <div className="flex gap-2">
